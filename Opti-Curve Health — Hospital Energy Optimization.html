@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Opti-Curve Health — Hospital Energy Optimization</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--navy:#1B365D;--teal:#008080;--amber:#F5A623;--bg:#F4F6F9;--card:rgba(255,255,255,.74);--cb:rgba(27,54,93,.13);--tx:#14233b;--mu:#5b6b82;--ok:#0f9d58;--grid:rgba(27,54,93,.1);--curve:#1B365D;--soft:rgba(0,128,128,.08)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1626;--card:rgba(26,42,70,.72);--cb:rgba(255,255,255,.12);--tx:#e8eef8;--mu:#9db0cb;--grid:rgba(255,255,255,.1);--curve:#8db8ff;--soft:rgba(0,170,170,.14)}}
+:root[data-theme="dark"]{--bg:#0d1626;--card:rgba(26,42,70,.72);--cb:rgba(255,255,255,.12);--tx:#e8eef8;--mu:#9db0cb;--grid:rgba(255,255,255,.1);--curve:#8db8ff;--soft:rgba(0,170,170,.14)}
+html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.glass{background:var(--card);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1px solid var(--cb);border-radius:18px;box-shadow:0 10px 30px rgba(27,54,93,.08)}
+.hero{background:radial-gradient(900px 400px at 85% -10%,rgba(0,128,128,.55),transparent 60%),linear-gradient(135deg,#12294a,#1B365D 60%,#17506b);color:#fff}
+.mu{color:var(--mu)}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+input[type=range]{width:100%;accent-color:var(--teal)}
+select{width:100%;padding:.5rem .6rem;border-radius:10px;border:1px solid var(--cb);background:var(--card);color:var(--tx);font:inherit}
+.btn{display:inline-flex;align-items:center;gap:.5rem;padding:.65rem 1.1rem;border-radius:12px;font-weight:600;border:1px solid transparent;cursor:pointer;transition:transform .15s}
+.btn:active{transform:scale(.97)}
+.btn:focus-visible,select:focus-visible,input:focus-visible,.step:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.sw{position:relative;width:52px;height:30px;flex:none}
+.sw input{position:absolute;inset:0;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:2}
+.sw i{position:absolute;inset:0;border-radius:99px;background:#9aa7b8;transition:background .2s}
+.sw i::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .2s}
+.sw input:checked+i{background:var(--teal)}.sw input:checked+i::after{transform:translateX(22px)}
+.sw input:focus-visible+i{outline:3px solid var(--amber);outline-offset:2px}
+.step{text-align:left;cursor:pointer;padding:.9rem;border-radius:14px;border:1px solid var(--cb);background:var(--card);color:inherit;transition:border-color .2s,box-shadow .2s}
+.step[aria-selected=true]{border-color:var(--teal);box-shadow:0 0 0 2px var(--teal) inset}
+.ide{background:#1e1e1e;color:#d4d4d4;border-radius:14px;overflow:hidden}
+.ide pre{margin:0;padding:1rem;overflow:auto;font-size:12.5px;line-height:1.6;max-height:62vh}
+.k{color:#c586c0}.s{color:#ce9178}.c{color:#6a9955;font-style:italic}.n{color:#b5cea8}.f{color:#dcdcaa}
+.fx{background:var(--soft);border-left:4px solid var(--teal);padding:.7rem .9rem;border-radius:10px}
+#drawer{position:fixed;inset:0;z-index:50;display:none;background:rgba(8,16,30,.6);padding:1rem;align-items:center;justify-content:center}
+#drawer.on{display:flex}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="max-w-6xl mx-auto px-5 py-12 md:py-16">
+    <p class="mono text-sm opacity-80 mb-3">CalSymPy · Topic 15</p>
+    <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight">Opti-Curve Health</h1>
+    <p class="mt-3 text-lg md:text-xl max-w-2xl opacity-90">Calculus-Driven Hospital Energy Optimization &amp; Advisory Pre-Cooling Platform</p>
+    <div class="mt-6 inline-flex items-start gap-3 rounded-2xl px-4 py-3 max-w-2xl" style="background:linear-gradient(135deg,#0f9d58,#0b7a44);box-shadow:0 8px 24px rgba(15,157,88,.4)">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-none mt-0.5" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6l8-3z"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg>
+      <span class="font-semibold leading-snug">100% Patient Safety Guaranteed — ICUs, Surgical Suites &amp; Life-Support Machinery Excluded &amp; Protected.</span>
+    </div>
+    <div class="mt-6 flex flex-wrap gap-3">
+      <a href="#dash" class="btn" style="background:#fff;color:#1B365D">Open dashboard</a>
+      <button class="btn" id="openCode" style="background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.4)">View Python code</button>
+    </div>
+  </div>
+</header>
+
+<main id="dash" class="max-w-6xl mx-auto px-4 md:px-5 py-8 space-y-6">
+
+  <section class="glass p-5" aria-labelledby="ctl">
+    <h2 id="ctl" class="text-xl font-bold mb-4">Live simulation &amp; control panel</h2>
+    <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <label class="block"><span class="flex justify-between text-sm font-semibold mb-2">Outdoor temperature (daily peak)<b id="tv" style="color:var(--teal)"></b></span>
+        <input id="temp" type="range" min="15" max="42" value="35"></label>
+      <label class="block"><span class="flex justify-between text-sm font-semibold mb-2">Ward occupancy<b id="ov" style="color:var(--teal)"></b></span>
+        <input id="occ" type="range" min="30" max="150" value="120"></label>
+      <label class="block"><span class="text-sm font-semibold mb-2 block">Learning rate (α)</span>
+        <select id="alpha"><option value="0.01">0.01</option><option value="0.05">0.05</option><option value="0.1" selected>0.1</option><option value="0.2">0.2</option></select></label>
+      <label class="block"><span class="text-sm font-semibold mb-2 block">Tolerance (ΔLoss)</span>
+        <select id="tol"><option value="0.0001">10⁻⁴</option><option value="0.00001" selected>10⁻⁵</option><option value="0.000001">10⁻⁶</option></select></label>
+    </div>
+    <div class="mt-5 flex items-center gap-3 flex-wrap">
+      <span class="sw"><input type="checkbox" id="pc" aria-labelledby="pcl"><i></i></span>
+      <label for="pc" id="pcl" class="font-semibold cursor-pointer">Simulate Early Morning Pre-Cooling (6 AM - 9 AM)</label>
+      <span class="mu text-sm">Advisory only: applies to non-critical wards, lobbies and admin zones.</span>
+    </div>
+  </section>
+
+  <div id="banner" class="rounded-2xl px-4 py-3 font-semibold flex gap-3 items-start" role="status"></div>
+
+  <section class="glass p-4 md:p-5">
+    <div class="flex flex-wrap justify-between gap-2 mb-3">
+      <h2 class="text-xl font-bold">24-hour demand curve</h2>
+      <p class="mu text-sm">Red points: measured usage · Navy curve: fitted model ŷ · Gold band: 12 PM – 4 PM peak window</p>
+    </div>
+    <div style="position:relative;height:360px"><canvas id="ch" aria-label="Hospital energy demand over 24 hours" role="img"></canvas></div>
+  </section>
+
+  <section class="grid gap-4 md:grid-cols-3">
+    <div class="glass p-5"><p class="mu text-sm font-semibold">Model accuracy</p>
+      <p class="text-3xl font-extrabold mt-1" id="c1a"></p><p class="mono text-sm mt-1" id="c1b"></p></div>
+    <div class="glass p-5" style="border-color:var(--amber);box-shadow:0 0 0 1px var(--amber) inset,0 10px 30px rgba(245,166,35,.18)"><p class="text-sm font-semibold" style="color:var(--amber)">Peak load demand</p>
+      <p class="text-3xl font-extrabold mt-1" id="c2a"></p><p class="mono text-sm mt-1" id="c2b"></p></div>
+    <div class="glass p-5"><p class="mu text-sm font-semibold" id="c3t">Estimated tariff savings</p>
+      <p class="text-3xl font-extrabold mt-1" style="color:var(--teal)" id="c3a"></p><p class="mono text-sm mt-1" id="c3b"></p></div>
+  </section>
+
+  <section class="glass p-5" aria-labelledby="pl">
+    <h2 id="pl" class="text-xl font-bold mb-1">6-step algorithmic pipeline explorer</h2>
+    <p class="mu text-sm mb-4">Select a step to see the math and the code behind it.</p>
+    <div id="steps" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" role="tablist"></div>
+    <div id="detail" class="mt-4 rounded-2xl p-4" style="border:1px solid var(--cb)" aria-live="polite"></div>
+  </section>
+</main>
+
+<footer class="hero mt-8">
+  <div class="max-w-6xl mx-auto px-5 py-6 text-sm flex flex-wrap justify-between gap-2">
+    <span>Team CalSymPy</span><span>Course: Python Programming &amp; Calculus</span><span>Academic Year 2026–27</span>
+  </div>
+</footer>
+
+<div id="drawer" role="dialog" aria-modal="true" aria-label="Python code preview">
+  <div class="ide w-full max-w-3xl">
+    <div class="flex items-center justify-between px-3 py-2" style="background:#2d2d30">
+      <div class="flex items-center gap-2"><span style="width:11px;height:11px;border-radius:50%;background:#ff5f56"></span><span style="width:11px;height:11px;border-radius:50%;background:#ffbd2e"></span><span style="width:11px;height:11px;border-radius:50%;background:#27c93f"></span>
+        <span class="mono text-xs ml-3" style="color:#ccc">opti_curve_optimizer.py</span></div>
+      <div class="flex gap-2"><button class="btn" id="cp" style="padding:.3rem .7rem;background:#0e639c;color:#fff;font-size:13px">Copy code</button><button class="btn" id="cl" style="padding:.3rem .7rem;background:#3c3c3c;color:#fff;font-size:13px" aria-label="Close">Close</button></div>
+    </div>
+    <pre class="mono"><code id="code"></code></pre>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const avg=a=>a.reduce((s,v)=>s+v,0)/a.length;
+const sd=a=>{const m=avg(a);return Math.sqrt(avg(a.map(v=>(v-m)**2)))||1};
+const H=[...Array(24).keys()];
+const Tf=(t,P)=>P-4+4*Math.cos(2*Math.PI*(t-15)/24);
+const Of=(t,O)=>O*(.88+.12*Math.cos(2*Math.PI*(t-11)/24));
+const sig=(t,P,O)=>40+2.85*t-.1*t*t+.55*Tf(t,P)+.12*Of(t,O);
+let seed=7;const rnd=()=>{seed=seed+0x6D2B79F5|0;let x=Math.imul(seed^seed>>>15,1|seed);x=x+Math.imul(x^x>>>7,61|x)^x;return((x^x>>>14)>>>0)/4294967296};
+let nz=H.map(()=>Math.sqrt(-2*Math.log(rnd()+1e-9))*Math.cos(2*Math.PI*rnd()));
+{const m=avg(nz),s=sd(nz);nz=nz.map(v=>(v-m)/s)}
+const s0=H.map(t=>sig(t,35,120)),mu0=avg(s0),M=Math.sqrt(32.4)/sd(s0);
+let NS=1;
+const dat=(t,P,O)=>62+M*(sig(t,P,O)-mu0)+NS*nz[t];
+
+function fit(P,O,al,tol){
+  const raw=H.map(t=>[t,t*t,Tf(t,P),Of(t,O)]);
+  const mu=[0,1,2,3].map(j=>avg(raw.map(r=>r[j]))),sg=[0,1,2,3].map(j=>sd(raw.map(r=>r[j])));
+  const y=H.map(t=>dat(t,P,O)),ym=avg(y),ys=sd(y);
+  const X=raw.map(r=>[1,...r.map((v,j)=>(v-mu[j])/sg[j])]),Y=y.map(v=>(v-ym)/ys);
+  const th=[0,0,0,0,0];let prev=Infinity,L=0,it=0;
+  for(;it<60000;it++){
+    const g=[0,0,0,0,0];L=0;
+    for(let i=0;i<24;i++){let p=0;for(let j=0;j<5;j++)p+=X[i][j]*th[j];const e=p-Y[i];L+=e*e;for(let j=0;j<5;j++)g[j]+=e*X[i][j]}
+    L/=48;if(Math.abs(prev-L)<tol)break;prev=L;
+    for(let j=0;j<5;j++)th[j]-=al*g[j]/24;
+  }
+  const pred=t=>{const f=[1,(t-mu[0])/sg[0],(t*t-mu[1])/sg[1],(Tf(t,P)-mu[2])/sg[2],(Of(t,O)-mu[3])/sg[3]];let p=0;for(let j=0;j<5;j++)p+=f[j]*th[j];return ym+ys*p};
+  const mse=avg(H.map(t=>(y[t]-pred(t))**2));
+  return{th,it,L,pred,y,mse,r2:1-mse/(ys*ys)};
+}
+// calibrate demo noise so the default scenario reproduces MSE ≈ 1.21 kWh²
+for(let k=0;k<8;k++){const f=fit(35,120,.1,1e-5);NS=Math.min(6,Math.max(.05,NS*Math.sqrt(1.21/f.mse)))}
+
+const b1=t=>t>11.5&&t<16.5?Math.sin(Math.PI*(t-11.5)/5):0;
+const b2=t=>t>6&&t<9?Math.sin(Math.PI*(t-6)/3):0;
+const adj=(t,v,pc)=>pc?v*(1-.2*b1(t)+.11*b2(t)):v;
+const shifted=f=>H.reduce((s,t)=>s+f.pred(t)*.2*b1(t),0);
+const K=26.48/shifted(fit(35,120,.1,1e-5));
+const fmt=h=>{const m=Math.round(h*60),hh=Math.floor(m/60)%24,mm=m%60;return(hh%12||12)+":"+String(mm).padStart(2,"0")+" "+(hh<12?"AM":"PM")};
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const peak=(f,pc)=>{let bt=0,bv=-1;for(let t=0;t<=23;t+=.01){const v=adj(t,f.pred(t),pc);if(v>bv){bv=v;bt=t}}return{t:bt,v:bv}};
+
+const band={id:"band",beforeDatasetsDraw(c){const{ctx,chartArea:a,scales:s}=c,x1=s.x.getPixelForValue(12),x2=s.x.getPixelForValue(16);
+  ctx.save();ctx.fillStyle="rgba(245,166,35,.25)";ctx.fillRect(x1,a.top,x2-x1,a.bottom-a.top);
+  ctx.fillStyle=css("--mu");ctx.font="600 11px Inter,sans-serif";ctx.textAlign="center";ctx.fillText("Peak window 12 PM – 4 PM",(x1+x2)/2,a.top+14);ctx.restore()}};
+const chart=new Chart($("ch"),{type:"scatter",plugins:[band],
+  data:{datasets:[
+    {label:"Measured usage (kWh)",data:[],backgroundColor:"#e03e3e",pointRadius:4.5,order:2},
+    {label:"Model fit ŷ",data:[],type:"line",borderColor:"#1B365D",borderWidth:3,pointRadius:0,tension:.3,order:1},
+    {label:"Baseline (no pre-cooling)",data:[],type:"line",borderColor:"#9aa7b8",borderDash:[6,5],borderWidth:2,pointRadius:0,tension:.3,order:3}]},
+  options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:"nearest",intersect:false},
+    scales:{x:{type:"linear",min:0,max:23,ticks:{stepSize:1},title:{display:true,text:"Hour of day (0–23)"}},y:{title:{display:true,text:"Energy usage (kWh)"}}},
+    plugins:{legend:{position:"bottom"},tooltip:{callbacks:{title:i=>fmt(i[0].parsed.x),label:i=>i.dataset.label+": "+i.parsed.y.toFixed(1)}}}}});
+
+let last,step=0;
+function run(){
+  const P=+$("temp").value,O=+$("occ").value,al=+$("alpha").value,tol=+$("tol").value,pc=$("pc").checked;
+  $("tv").textContent=P+" °C";$("ov").textContent=O+" patients";
+  const f=last=fit(P,O,al,tol),base=[],cur=[];
+  for(let t=0;t<=23.001;t+=.1){const x=+t.toFixed(1);base.push({x,y:f.pred(t)});cur.push({x,y:adj(t,f.pred(t),pc)})}
+  const ink=css("--tx"),gr=css("--grid");
+  chart.options.color=ink;
+  for(const k of["x","y"]){chart.options.scales[k].ticks.color=css("--mu");chart.options.scales[k].title.color=css("--mu");chart.options.scales[k].grid.color=gr}
+  chart.data.datasets[0].data=H.map(t=>({x:t,y:f.y[t]}));
+  chart.data.datasets[1].data=cur;chart.data.datasets[1].borderColor=css("--curve");
+  chart.data.datasets[2].data=pc?base:[];
+  chart.update("none");
+  const pb=peak(f,false),pa=peak(f,pc),sh=shifted(f)*K,day=sh;
+  $("c1a").textContent="R² = "+f.r2.toFixed(3);$("c1b").textContent="MSE = "+f.mse.toFixed(2)+" kWh² · "+f.it.toLocaleString()+" iterations";
+  $("c2a").textContent=pa.v.toFixed(1)+" kW";$("c2b").textContent="Max kW at "+fmt(pa.t)+(pc?" · "+((1-pa.v/pb.v)*100).toFixed(1)+"% below baseline":"");
+  $("c3t").textContent=pc?"Tariff savings (pre-cooling active)":"Potential tariff savings";
+  $("c3a").textContent="$"+day.toFixed(2)+" / Day";$("c3b").textContent="~$"+(Math.round(day*30/50)*50)+" / Month";
+  const bn=$("banner");
+  if(pc){bn.style.cssText="background:rgba(15,157,88,.15);border:1px solid var(--ok);color:var(--tx)";bn.textContent="Pre-cooling is on: the afternoon peak is shaved to "+pa.v.toFixed(1)+" kW, and the added morning load runs at off-peak tariff."}
+  else{bn.style.cssText="background:rgba(245,166,35,.2);border:1px solid var(--amber);color:var(--tx)";bn.textContent="Peak load warning: demand reaches "+pb.v.toFixed(1)+" kW at "+fmt(pb.t)+". Turn on early morning pre-cooling to see the advisory effect."}
+  renderStep();
+}
+
+const STEPS=[
+ {t:"Data Ingestion",tag:"NumPy",fx:"X = [1, t, t², T, Occ]  →  24 × 5 matrix",d:"Hourly telemetry from non-critical zones is stacked into a feature matrix. Columns are standardized so one learning rate suits every parameter.",c:"X = np.column_stack([np.ones_like(t), t, t**2, T, occ])"},
+ {t:"Loss Setup",tag:"Sum of squared errors",fx:"L(θ) = Σᵢ ( yᵢ − Xᵢ·θ )²",d:"The loss measures the gap between measured usage and the polynomial model. Minimizing it gives the best-fit curve.",c:"err = y_sym - sum(a*b for a, b in zip(th, x))\nL = err**2"},
+ {t:"Symbolic Calculus",tag:"SymPy",fx:"∂L/∂θⱼ = −2 Σᵢ ( yᵢ − Xᵢ·θ ) · Xᵢⱼ",d:"SymPy derives each partial derivative exactly, with no finite-difference error.",c:"grad = [sp.diff(L, p) for p in th]"},
+ {t:"Function Compilation",tag:"lambdify",fx:"∇L (symbolic)  →  grad_fn (compiled NumPy)",d:"sp.lambdify turns the symbolic gradient into a fast numerical function that the loop can call thousands of times.",c:"grad_fn = sp.lambdify([th, x, y_sym], grad, modules=\"numpy\")"},
+ {t:"Optimization Loop",tag:"Gradient descent",fx:"θ ← θ − α·∇L   until  |ΔLoss| < tol",d:"",c:"theta -= alpha * g / n\nif abs(prev - loss) < tol: break"},
+ {t:"Visual Analytics & Pre-Cooling",tag:"Matplotlib",fx:"ŷ = X·θ  →  shave 12–4 PM, shift load to 6–9 AM",d:"The fitted curve is plotted against the measured points. Advisory pre-cooling moves flexible cooling load from the peak tariff window to the morning.",c:"plt.plot(t, X @ theta)\nplt.axvspan(12, 16, color=\"gold\", alpha=.25)"}];
+const sb=$("steps");
+STEPS.forEach((s,i)=>{const b=document.createElement("button");b.className="step";b.setAttribute("role","tab");
+  b.innerHTML='<span class="flex items-center gap-2"><span class="mono font-bold" style="color:var(--teal)">Step '+(i+1)+'</span><span class="mu text-xs">'+s.tag+'</span></span><span class="block font-bold mt-1">'+s.t+'</span>';
+  b.onclick=()=>{step=i;renderStep()};sb.appendChild(b)});
+function renderStep(){
+  [...sb.children].forEach((b,i)=>b.setAttribute("aria-selected",i===step));
+  const s=STEPS[step];let extra="";
+  if(step===4&&last)extra='<div class="mono text-sm mt-3">α = '+$("alpha").value+' · tol = '+(+$("tol").value).toExponential(0)+'<br>Converged in '+last.it.toLocaleString()+' iterations · final loss '+last.L.toExponential(2)+'<br>θ (standardized) = ['+last.th.map(v=>v.toFixed(3)).join(", ")+']</div>';
+  const d=step===4?"Parameters are nudged against the gradient each iteration until the loss stops improving. Change α or the tolerance above and watch the iteration count move.":s.d;
+  $("detail").innerHTML='<h3 class="font-bold text-lg">Step '+(step+1)+': '+s.t+'</h3><p class="fx mono text-sm mt-2">'+s.fx+'</p><p class="mt-3">'+d+'</p>'+extra+'<pre class="mono text-xs mt-3 p-3 rounded-xl overflow-auto" style="background:#1e1e1e;color:#d4d4d4">'+hl(s.c)+'</pre>';
+}
+
+const PY=`import numpy as np
+import sympy as sp
+import matplotlib.pyplot as plt
+
+# Step 1 - Data ingestion: X = [1, t, t^2, T, Occ]
+t, T, occ, y = load_hospital_data()   # 24 hourly samples
+X = np.column_stack([np.ones_like(t), t, t**2, T, occ])
+X[:, 1:] = (X[:, 1:] - X[:, 1:].mean(0)) / X[:, 1:].std(0)
+
+# Step 2 - Loss setup: L(theta) = sum (y - X theta)^2
+th = sp.symbols("th0:5")
+x = sp.symbols("x0:5")
+y_sym = sp.Symbol("y")
+L = (y_sym - sum(a * b for a, b in zip(th, x))) ** 2
+
+# Step 3 - Symbolic calculus: analytical partial derivatives
+grad = [sp.diff(L, p) for p in th]
+
+# Step 4 - Compile to C-level NumPy functions
+grad_fn = sp.lambdify([th, x, y_sym], grad, modules="numpy")
+
+# Step 5 - Gradient descent until delta-loss < 1e-5
+alpha, tol = 0.1, 1e-5
+theta, prev = np.zeros(5), np.inf
+for k in range(60000):
+    g = sum(np.array(grad_fn(theta, X[i], y[i])) for i in range(len(y)))
+    theta -= alpha * g / len(y)
+    loss = np.sum((y - X @ theta) ** 2)
+    if abs(prev - loss) < tol:
+        break
+    prev = loss
+
+# Step 6 - Visual analytics and pre-cooling
+y_hat = X @ theta
+plt.scatter(t, y, c="red", label="Measured kWh")
+plt.plot(t, y_hat, c="#1B365D", lw=3, label="Model fit")
+plt.axvspan(12, 16, color="gold", alpha=0.25)
+plt.show()`;
+function hl(src){return src.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+  .replace(/(#.*$)|("[^"\n]*")|\b(import|from|as|def|for|in|while|return|if|break|and)\b|\b(\d+\.?\d*(?:e-?\d+)?)\b|\b([a-z_]+)(?=\()/gm,(m,c,s,k,n,f)=>c?'<span class="c">'+c+'</span>':s?'<span class="s">'+s+'</span>':k?'<span class="k">'+k+'</span>':n?'<span class="n">'+n+'</span>':'<span class="f">'+f+'</span>')}
+$("code").innerHTML=hl(PY);
+
+const dr=$("drawer"),open=v=>{dr.classList.toggle("on",v);if(v)$("cl").focus()};
+$("openCode").onclick=()=>open(true);$("cl").onclick=()=>open(false);
+dr.onclick=e=>{if(e.target===dr)open(false)};
+document.addEventListener("keydown",e=>{if(e.key==="Escape")open(false)});
+$("cp").onclick=async()=>{try{await navigator.clipboard.writeText(PY);$("cp").textContent="Copied"}catch(e){$("cp").textContent="Select and copy manually"}setTimeout(()=>$("cp").textContent="Copy code",1600)};
+
+let raf;const sched=()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(run)};
+["temp","occ","alpha","tol","pc"].forEach(id=>$(id).addEventListener("input",sched));
+$("pc").addEventListener("change",sched);
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",sched);
+run();
+</script>
+</body>
+</html>
